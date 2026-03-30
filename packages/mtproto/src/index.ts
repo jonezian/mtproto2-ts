@@ -18,3 +18,17 @@ export { ReconnectStrategy } from './reconnect.js';
 export type { ReconnectOptions } from './reconnect.js';
 export { MTProtoConnection } from './connection.js';
 export type { MTProtoConnectionOptions, MTProtoConnectionEvents, TransportType } from './connection.js';
+export { UpdateState } from './update-state.js';
+export type { UpdateStateData, UpdateApplyResult } from './update-state.js';
+export { UpdateHandler } from './update-handler.js';
+export type { UpdateHandlerEvents } from './update-handler.js';
+export {
+  UPDATE_CIDS,
+  extractUpdateState,
+  isUpdateWrapper,
+  parseUpdateShort,
+  serializeGetState,
+  serializeGetDifference,
+  serializeGetChannelDifference,
+} from './difference.js';
+export type { BufferedUpdate } from './difference.js';
