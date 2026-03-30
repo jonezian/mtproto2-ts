@@ -1,0 +1,13 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/tl-schema" },
+    { "path": "packages/tl-types" },
+    { "path": "packages/crypto" },
+    { "path": "packages/binary" },
+    { "path": "packages/transport" },
+    { "path": "packages/mtproto" },
+    { "path": "packages/client" },
+    { "path": "packages/kerain" }
+  ]
+}

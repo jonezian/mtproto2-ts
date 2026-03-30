@@ -1,0 +1,62 @@
+name: Schema Update Check
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  check-schema:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Fetch latest schema
+        run: npm run fetch-schema
+
+      - name: Check for changes
+        id: diff
+        run: |
+          npm run diff-schema -- --ci || true
+          if git diff --quiet packages/tl-schema/src/schema/; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            LAYER=$(grep -oP '// LAYER \K\d+' packages/tl-schema/src/schema/api.tl || echo "unknown")
+            echo "layer=$LAYER" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate types
+        if: steps.diff.outputs.changed == 'true'
+        run: npm run generate
+
+      - name: Type check
+        if: steps.diff.outputs.changed == 'true'
+        run: npm run typecheck
+
+      - name: Test
+        if: steps.diff.outputs.changed == 'true'
+        run: npm run test
+
+      - name: Create PR
+        if: steps.diff.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          title: 'chore: update TL schema to layer ${{ steps.diff.outputs.layer }}'
+          body: |
+            Auto-detected Telegram TL schema update.
+
+            **Layer**: ${{ steps.diff.outputs.layer }}
+
+            This PR was created automatically by the schema update workflow.
+            Review the generated type changes before merging.
+          branch: schema-update-${{ steps.diff.outputs.layer }}
+          labels: schema-update,auto-generated
+          commit-message: 'chore: update TL schema to layer ${{ steps.diff.outputs.layer }}'

@@ -1,0 +1,22 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.cache/
+coverage/
+
+# Generated types (tracked separately via generate script)
+packages/tl-types/src/generated/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
