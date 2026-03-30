@@ -1,1 +1,10 @@
-export {}; // MTProto engine
+export { encryptMessage, decryptMessage } from './encryption.js';
+export { MsgIdGenerator } from './msg-id.js';
+export { SeqNoTracker } from './seq-no.js';
+export { packContainer, unpackContainer, isContainer } from './container.js';
+export type { InnerMessage } from './container.js';
+export { RpcHandler, RpcError } from './rpc.js';
+export type { PendingRpc } from './rpc.js';
+export { createMsgsAck, parseMsgsAck } from './ack.js';
+export { SaltManager } from './salt-manager.js';
+export type { FutureSalt } from './salt-manager.js';
