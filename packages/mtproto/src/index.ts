@@ -8,3 +8,5 @@ export type { PendingRpc } from './rpc.js';
 export { createMsgsAck, parseMsgsAck } from './ack.js';
 export { SaltManager } from './salt-manager.js';
 export type { FutureSalt } from './salt-manager.js';
+export { AuthKeyExchange, deriveTmpAesKeyIv, computeServerSalt } from './auth-key-exchange.js';
+export type { AuthKeyResult, SendFunction, AuthKeyExchangeOptions } from './auth-key-exchange.js';
