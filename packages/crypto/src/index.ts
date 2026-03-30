@@ -1,1 +1,10 @@
-export {}; // Crypto primitives
+export { aesIgeEncrypt, aesIgeDecrypt } from './aes-ige.js';
+export { AesCtr } from './aes-ctr.js';
+export { sha1, sha256 } from './sha.js';
+export { rsaPad, TELEGRAM_RSA_KEYS } from './rsa.js';
+export type { RsaPublicKey } from './rsa.js';
+export { factorizePQ } from './pq.js';
+export { modPow, isGoodPrime, isGoodGa } from './dh.js';
+export { deriveAesKeyIv } from './key-derivation.js';
+export { calcAuthKeyId, calcMsgKey } from './auth-key.js';
+export { randomBytes, randomBigInt } from './random.js';
