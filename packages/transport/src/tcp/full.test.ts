@@ -1,0 +1,168 @@
+import { describe, it, expect } from 'vitest';
+import { FullTransport } from './full.js';
+import { crc32 } from '../crc32.js';
+
+describe('FullTransport', () => {
+  function makeTransport(): FullTransport {
+    return new FullTransport();
+  }
+
+  describe('encodePacket', () => {
+    it('encodes with correct total length', () => {
+      const transport = makeTransport();
+      const payload = Buffer.alloc(32, 0xaa);
+      const encoded = transport.encodePacket(payload);
+
+      // Total length = 12 + 32 = 44
+      expect(encoded.length).toBe(44);
+      expect(encoded.readUInt32LE(0)).toBe(44);
+    });
+
+    it('encodes with sequence number starting at 0', () => {
+      const transport = makeTransport();
+      const payload = Buffer.alloc(16, 0xbb);
+      const encoded = transport.encodePacket(payload);
+
+      expect(encoded.readUInt32LE(4)).toBe(0);
+    });
+
+    it('increments sequence number on each packet', () => {
+      const transport = makeTransport();
+      const payload = Buffer.alloc(16, 0xcc);
+
+      const encoded0 = transport.encodePacket(payload);
+      const encoded1 = transport.encodePacket(payload);
+      const encoded2 = transport.encodePacket(payload);
+
+      expect(encoded0.readUInt32LE(4)).toBe(0);
+      expect(encoded1.readUInt32LE(4)).toBe(1);
+      expect(encoded2.readUInt32LE(4)).toBe(2);
+    });
+
+    it('includes payload at offset 8', () => {
+      const transport = makeTransport();
+      const payload = Buffer.alloc(20, 0xdd);
+      const encoded = transport.encodePacket(payload);
+
+      expect(encoded.subarray(8, 28)).toEqual(payload);
+    });
+
+    it('appends valid CRC32', () => {
+      const transport = makeTransport();
+      const payload = Buffer.alloc(24, 0xee);
+      const encoded = transport.encodePacket(payload);
+
+      const totalLen = encoded.readUInt32LE(0);
+      const dataBeforeCrc = encoded.subarray(0, totalLen - 4);
+      const expectedCrc = crc32(dataBeforeCrc);
+      const actualCrc = encoded.readUInt32LE(totalLen - 4);
+
+      expect(actualCrc).toBe(expectedCrc);
+    });
+  });
+
+  describe('decodePacket', () => {
+    it('decodes a valid frame', () => {
+      const transport = makeTransport();
+      const payload = Buffer.alloc(32, 0x42);
+
+      // Use a separate transport for encoding to avoid shared seq state
+      const encoder = makeTransport();
+      const encoded = encoder.encodePacket(payload);
+
+      const decoded = transport.decodePacket(encoded);
+      expect(decoded.length).toBe(1);
+      expect(decoded[0]).toEqual(payload);
+    });
+
+    it('decodes multiple frames', () => {
+      const encoder = makeTransport();
+      const decoder = makeTransport();
+      const p1 = Buffer.alloc(8, 0x11);
+      const p2 = Buffer.alloc(16, 0x22);
+      const p3 = Buffer.alloc(24, 0x33);
+
+      const encoded = Buffer.concat([
+        encoder.encodePacket(p1),
+        encoder.encodePacket(p2),
+        encoder.encodePacket(p3),
+      ]);
+
+      const decoded = decoder.decodePacket(encoded);
+      expect(decoded.length).toBe(3);
+      expect(decoded[0]).toEqual(p1);
+      expect(decoded[1]).toEqual(p2);
+      expect(decoded[2]).toEqual(p3);
+    });
+
+    it('rejects frame with corrupted CRC32', () => {
+      const transport = makeTransport();
+      const payload = Buffer.alloc(16, 0xff);
+
+      const encoder = makeTransport();
+      const encoded = encoder.encodePacket(payload);
+
+      // Corrupt the CRC32 (last 4 bytes)
+      const corrupted = Buffer.from(encoded);
+      corrupted[corrupted.length - 1] = corrupted[corrupted.length - 1]! ^ 0xff;
+
+      const errors: Error[] = [];
+      transport.on('error', (err: Error) => errors.push(err));
+
+      const decoded = transport.decodePacket(corrupted);
+      expect(decoded.length).toBe(0);
+      expect(errors.length).toBe(1);
+      expect(errors[0]!.message).toMatch(/CRC32 mismatch/);
+    });
+
+    it('rejects frame with corrupted payload', () => {
+      const transport = makeTransport();
+      const payload = Buffer.alloc(16, 0xaa);
+
+      const encoder = makeTransport();
+      const encoded = encoder.encodePacket(payload);
+
+      // Corrupt the payload
+      const corrupted = Buffer.from(encoded);
+      corrupted[10] = corrupted[10]! ^ 0xff;
+
+      const errors: Error[] = [];
+      transport.on('error', (err: Error) => errors.push(err));
+
+      const decoded = transport.decodePacket(corrupted);
+      expect(decoded.length).toBe(0);
+      expect(errors.length).toBe(1);
+      expect(errors[0]!.message).toMatch(/CRC32 mismatch/);
+    });
+
+    it('handles partial frame (buffers remaining)', () => {
+      const encoder = makeTransport();
+      const decoder = makeTransport();
+      const payload = Buffer.alloc(64, 0x77);
+      const encoded = encoder.encodePacket(payload);
+
+      // Send partial
+      const part1 = encoded.subarray(0, 20);
+      const decoded1 = decoder.decodePacket(part1);
+      expect(decoded1.length).toBe(0);
+
+      // Send rest
+      const part2 = encoded.subarray(20);
+      const decoded2 = decoder.decodePacket(part2);
+      expect(decoded2.length).toBe(1);
+      expect(decoded2[0]).toEqual(payload);
+    });
+  });
+
+  describe('crc32', () => {
+    it('computes known CRC32 value', () => {
+      // Known test vector: CRC32 of "123456789" = 0xCBF43926
+      const data = Buffer.from('123456789', 'ascii');
+      expect(crc32(data)).toBe(0xcbf43926);
+    });
+
+    it('computes CRC32 of empty buffer', () => {
+      expect(crc32(Buffer.alloc(0))).toBe(0x00000000);
+    });
+  });
+});
