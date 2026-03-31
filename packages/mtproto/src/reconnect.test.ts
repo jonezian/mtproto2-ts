@@ -1,5 +1,17 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
+import crypto from 'node:crypto';
 import { ReconnectStrategy } from './reconnect.js';
+
+/**
+ * Helper: create a 4-byte LE buffer whose readUInt32LE(0) / 0x100000000
+ * equals the desired float value (0..1).
+ */
+function mockCryptoValue(value: number): Buffer {
+  const uint32 = Math.round(value * 0x100000000);
+  const buf = Buffer.alloc(4);
+  buf.writeUInt32LE(uint32, 0);
+  return buf;
+}
 
 describe('ReconnectStrategy', () => {
   afterEach(() => {
@@ -37,8 +49,8 @@ describe('ReconnectStrategy', () => {
     });
 
     it('should apply jitter when enabled', () => {
-      // Mock Math.random to return 0.5, giving jitter factor of 1.0
-      vi.spyOn(Math, 'random').mockReturnValue(0.5);
+      // Mock crypto.randomBytes to return value producing 0.5, giving jitter factor of 1.0
+      vi.spyOn(crypto, 'randomBytes').mockReturnValue(mockCryptoValue(0.5) as any);
 
       const strategy = new ReconnectStrategy({
         initialDelay: 1000,
@@ -51,8 +63,8 @@ describe('ReconnectStrategy', () => {
     });
 
     it('should apply minimum jitter factor of 0.5', () => {
-      // Math.random() returns 0.0 -> jitter factor = 0.5
-      vi.spyOn(Math, 'random').mockReturnValue(0.0);
+      // crypto.randomBytes returns 0.0 -> jitter factor = 0.5
+      vi.spyOn(crypto, 'randomBytes').mockReturnValue(mockCryptoValue(0.0) as any);
 
       const strategy = new ReconnectStrategy({
         initialDelay: 1000,
@@ -64,8 +76,8 @@ describe('ReconnectStrategy', () => {
     });
 
     it('should apply maximum jitter factor near 1.5', () => {
-      // Math.random() returns ~1.0 -> jitter factor ~ 1.5
-      vi.spyOn(Math, 'random').mockReturnValue(0.9999);
+      // crypto.randomBytes returns ~1.0 -> jitter factor ~ 1.5
+      vi.spyOn(crypto, 'randomBytes').mockReturnValue(mockCryptoValue(0.9999) as any);
 
       const strategy = new ReconnectStrategy({
         initialDelay: 1000,
@@ -78,7 +90,7 @@ describe('ReconnectStrategy', () => {
     });
 
     it('should use default options', () => {
-      vi.spyOn(Math, 'random').mockReturnValue(0.5);
+      vi.spyOn(crypto, 'randomBytes').mockReturnValue(mockCryptoValue(0.5) as any);
 
       const strategy = new ReconnectStrategy();
 

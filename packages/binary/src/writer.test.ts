@@ -305,6 +305,19 @@ describe('TLWriter', () => {
     });
   });
 
+  describe('MAX_BUFFER_SIZE guard', () => {
+    it('has MAX_BUFFER_SIZE static property set to 50MB', () => {
+      expect(TLWriter.MAX_BUFFER_SIZE).toBe(50 * 1024 * 1024);
+    });
+
+    it('throws RangeError when writing data exceeding 50MB', () => {
+      const writer = new TLWriter(64);
+      // Create a buffer just over 50MB
+      const oversized = Buffer.alloc(50 * 1024 * 1024 + 1);
+      expect(() => writer.writeRaw(oversized)).toThrow(RangeError);
+    });
+  });
+
   describe('toBuffer returns a copy', () => {
     it('returns independent buffer', () => {
       const writer = new TLWriter();

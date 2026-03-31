@@ -368,6 +368,44 @@ describe('TLReader', () => {
     });
   });
 
+  describe('MAX_BYTES_LENGTH guard', () => {
+    it('has MAX_BYTES_LENGTH static property set to 10MB', () => {
+      expect(TLReader.MAX_BYTES_LENGTH).toBe(10 * 1024 * 1024);
+    });
+
+    it('throws RangeError when readBytes encounters a length > MAX_BYTES_LENGTH (11MB)', () => {
+      // Fabricate a buffer with a long-form length field encoding 11MB
+      const length = 11 * 1024 * 1024; // 11MB
+      const headerSize = 4;
+      const buf = Buffer.alloc(headerSize + 16); // Don't need the full buffer, just the header
+      buf[0] = 0xfe; // long-form marker
+      buf[1] = length & 0xff;
+      buf[2] = (length >> 8) & 0xff;
+      buf[3] = (length >> 16) & 0xff;
+
+      const reader = new TLReader(buf);
+      expect(() => reader.readBytes()).toThrow(RangeError);
+    });
+
+    it('does not throw for readBytes at the limit (10MB) if buffer is large enough', () => {
+      const length = 10 * 1024 * 1024; // exactly 10MB
+      const headerSize = 4;
+      const totalBeforePad = headerSize + length;
+      const padding = (4 - (totalBeforePad % 4)) % 4;
+      const totalSize = totalBeforePad + padding;
+      const buf = Buffer.alloc(totalSize);
+      buf[0] = 0xfe;
+      buf[1] = length & 0xff;
+      buf[2] = (length >> 8) & 0xff;
+      buf[3] = (length >> 16) & 0xff;
+
+      const reader = new TLReader(buf);
+      // Should not throw - the length is exactly at the limit
+      const result = reader.readBytes();
+      expect(result.length).toBe(length);
+    });
+  });
+
   describe('reading past end', () => {
     it('throws when reading int32 past end', () => {
       const buf = Buffer.alloc(2);

@@ -5,6 +5,8 @@ const VECTOR_CID = 0x1cb5c415;
 const DEFAULT_CAPACITY = 256;
 
 export class TLWriter {
+  static MAX_BUFFER_SIZE = 50 * 1024 * 1024; // 50 MB
+
   private buf: Buffer;
   private offset: number;
 
@@ -19,6 +21,9 @@ export class TLWriter {
 
   private ensureCapacity(additional: number): void {
     const required = this.offset + additional;
+    if (required > TLWriter.MAX_BUFFER_SIZE) {
+      throw new RangeError(`TLWriter buffer would exceed maximum size of ${TLWriter.MAX_BUFFER_SIZE} bytes`);
+    }
     if (required <= this.buf.length) return;
 
     let newSize = this.buf.length;

@@ -3,6 +3,8 @@ const BOOL_FALSE = 0xbc799737;
 const VECTOR_CID = 0x1cb5c415;
 
 export class TLReader {
+  static MAX_BYTES_LENGTH = 10 * 1024 * 1024; // 10 MB
+
   private buf: Buffer;
   private offset: number;
 
@@ -88,6 +90,10 @@ export class TLReader {
         (this.buf[this.offset + 2]! << 8) |
         (this.buf[this.offset + 3]! << 16);
       headerSize = 4;
+    }
+
+    if (length > TLReader.MAX_BYTES_LENGTH) {
+      throw new RangeError(`Bytes field length ${length} exceeds maximum allowed ${TLReader.MAX_BYTES_LENGTH}`);
     }
 
     const totalBeforePad = headerSize + length;

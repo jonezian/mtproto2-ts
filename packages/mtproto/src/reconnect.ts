@@ -1,3 +1,5 @@
+import crypto from 'node:crypto';
+
 /**
  * Reconnection strategy with exponential backoff and optional jitter.
  *
@@ -59,7 +61,7 @@ export class ReconnectStrategy {
 
     if (jitter) {
       // Apply jitter: multiply by a random factor in [0.5, 1.5)
-      const jitterFactor = 0.5 + Math.random();
+      const jitterFactor = 0.5 + crypto.randomBytes(4).readUInt32LE(0) / 0x100000000;
       delay = delay * jitterFactor;
     }
 

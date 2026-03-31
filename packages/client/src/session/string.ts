@@ -3,6 +3,14 @@ import type { SessionStorage, SessionData } from './abstract.js';
 /**
  * String-based session storage using base64 encoding.
  *
+ * **SECURITY WARNING**: The session string contains the raw 256-byte auth key
+ * in plaintext (base64-encoded). Anyone with access to this string can
+ * impersonate the authenticated user. Treat session strings with the same
+ * care as passwords:
+ * - Never log or print session strings
+ * - Store them in encrypted storage or environment variables
+ * - Never commit them to version control
+ *
  * The session is serialized into a compact binary format and then
  * base64-encoded into a portable string. This is compatible with the
  * Telethon StringSession format:

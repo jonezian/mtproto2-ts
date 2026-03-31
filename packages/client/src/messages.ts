@@ -1,4 +1,5 @@
 import { TLWriter } from '@mtproto2/binary';
+import { randomBytes } from '@mtproto2/crypto';
 import type { TelegramClient } from './client.js';
 
 /**
@@ -47,7 +48,7 @@ export async function sendMessage(
   w.writeRaw(peer); // InputPeer (already serialized)
   w.writeString(text);
   // random_id: long
-  const randomId = opts?.randomId ?? BigInt(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER));
+  const randomId = opts?.randomId ?? randomBytes(8).readBigInt64LE(0);
   w.writeInt64(randomId);
 
   return client.invoke(w.toBuffer());

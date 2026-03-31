@@ -100,6 +100,46 @@ describe('messages helpers', () => {
       r.readString(); // message
       expect(r.readInt64()).toBe(42n);
     });
+
+    it('should generate a cryptographically random random_id when not provided', async () => {
+      await sendMessage(client, makeInputPeer(), 'hello1');
+      const buf1 = client._lastInvoke!;
+
+      await sendMessage(client, makeInputPeer(), 'hello2');
+      const buf2 = client._lastInvoke!;
+
+      // Extract random_id from each serialization
+      const r1 = new TLReader(buf1);
+      r1.readConstructorId();
+      r1.readInt32(); // flags
+      r1.readConstructorId(); // inputPeerEmpty
+      r1.readString(); // message
+      const randomId1 = r1.readInt64();
+
+      const r2 = new TLReader(buf2);
+      r2.readConstructorId();
+      r2.readInt32(); // flags
+      r2.readConstructorId(); // inputPeerEmpty
+      r2.readString(); // message
+      const randomId2 = r2.readInt64();
+
+      // random_id should be different on each call
+      expect(randomId1).not.toBe(randomId2);
+    });
+
+    it('random_id is an 8-byte bigint value', async () => {
+      await sendMessage(client, makeInputPeer(), 'test_random');
+
+      const r = new TLReader(client._lastInvoke!);
+      r.readConstructorId();
+      r.readInt32(); // flags
+      r.readConstructorId(); // inputPeerEmpty
+      r.readString(); // message
+      const randomId = r.readInt64();
+
+      // It should be a bigint (readInt64 returns bigint)
+      expect(typeof randomId).toBe('bigint');
+    });
   });
 
   describe('getMessages', () => {
