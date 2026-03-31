@@ -1,4 +1,4 @@
-import type { TelegramClient, SessionData } from '@kerainmtp/client';
+import type { TelegramClient, SessionData } from '@mtproto2/client';
 
 /**
  * Portable session representation for import/export.

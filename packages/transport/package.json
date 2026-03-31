@@ -1,14 +1,19 @@
 {
-  "name": "@kerainmtp/transport",
+  "name": "@mtproto2/transport",
   "version": "0.1.0",
   "type": "module",
+  "description": "TCP transport layer for MTProto 2.0 — abridged, intermediate, padded, full, obfuscated",
+  "license": "MIT",
+  "keywords": ["telegram", "mtproto", "mtproto2", "typescript"],
+  "repository": { "type": "git", "url": "https://github.com/jonezian/KerainMTP.git", "directory": "packages/transport" },
+  "engines": { "node": ">=22" },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc"
   },
   "dependencies": {
-    "@kerainmtp/binary": "*",
-    "@kerainmtp/crypto": "*"
+    "@mtproto2/binary": "*",
+    "@mtproto2/crypto": "*"
   }
 }

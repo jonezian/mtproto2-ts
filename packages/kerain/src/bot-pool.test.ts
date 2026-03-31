@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BotPool } from './bot-pool.js';
 import type { SessionConfig, ClientFactory } from './bot-pool.js';
-import type { TelegramClient } from '@kerainmtp/client';
+import type { TelegramClient } from '@mtproto2/client';
 
 /**
  * Create a mock TelegramClient with all required methods.

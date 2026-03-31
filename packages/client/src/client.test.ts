@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { TLReader } from '@kerainmtp/binary';
+import { TLReader } from '@mtproto2/binary';
 import { TelegramClient } from './client.js';
 import { MemorySession } from './session/memory.js';
 import { EntityCache } from './entity-cache.js';

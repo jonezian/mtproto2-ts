@@ -3,7 +3,7 @@
  * TL Schema Differ
  *
  * Compares two TL schema files (old vs new) and reports differences.
- * Uses the TL parser from @kerainmtp/tl-schema to parse both files.
+ * Uses the TL parser from @mtproto2/tl-schema to parse both files.
  *
  * Usage:
  *   npx tsx scripts/diff-schema.ts [old-file] [new-file]

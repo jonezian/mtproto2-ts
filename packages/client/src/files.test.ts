@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { TLReader } from '@kerainmtp/binary';
+import { TLReader } from '@mtproto2/binary';
 import {
   serializeSaveFilePart,
   serializeSaveBigFilePart,
@@ -236,7 +236,7 @@ describe('serializeGetFile', () => {
 
 describe('parseGetFileResponse', () => {
   it('should parse upload.file response', () => {
-    const { TLWriter: W } = require('@kerainmtp/binary');
+    const { TLWriter: W } = require('@mtproto2/binary');
     const w = new W(128);
     w.writeConstructorId(FILE_CID.upload_file);
     w.writeConstructorId(FILE_CID.storage_fileUnknown); // type
@@ -253,7 +253,7 @@ describe('parseGetFileResponse', () => {
   });
 
   it('should parse upload.fileCdnRedirect response', () => {
-    const { TLWriter: W } = require('@kerainmtp/binary');
+    const { TLWriter: W } = require('@mtproto2/binary');
     const w = new W(256);
     w.writeConstructorId(FILE_CID.upload_fileCdnRedirect);
     w.writeInt32(3); // dc_id
@@ -278,7 +278,7 @@ describe('parseGetFileResponse', () => {
   });
 
   it('should throw on unknown constructor ID', () => {
-    const { TLWriter: W } = require('@kerainmtp/binary');
+    const { TLWriter: W } = require('@mtproto2/binary');
     const w = new W(16);
     w.writeConstructorId(0xDEADBEEF);
 
@@ -288,7 +288,7 @@ describe('parseGetFileResponse', () => {
   });
 
   it('should handle empty file bytes in upload.file', () => {
-    const { TLWriter: W } = require('@kerainmtp/binary');
+    const { TLWriter: W } = require('@mtproto2/binary');
     const w = new W(64);
     w.writeConstructorId(FILE_CID.upload_file);
     w.writeConstructorId(FILE_CID.storage_fileUnknown);

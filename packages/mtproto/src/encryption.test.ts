@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { randomBytes, calcAuthKeyId } from '@kerainmtp/crypto';
+import { randomBytes, calcAuthKeyId } from '@mtproto2/crypto';
 import { encryptMessage, decryptMessage } from './encryption.js';
 
 function makeAuthKey(): Buffer {

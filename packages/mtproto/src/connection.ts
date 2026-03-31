@@ -1,13 +1,13 @@
 import { EventEmitter } from 'node:events';
-import { Transport } from '@kerainmtp/transport';
+import { Transport } from '@mtproto2/transport';
 import {
   AbridgedTransport,
   IntermediateTransport,
   PaddedIntermediateTransport,
   FullTransport,
   ObfuscatedTransport,
-} from '@kerainmtp/transport';
-import type { TransportMagicName } from '@kerainmtp/transport';
+} from '@mtproto2/transport';
+import type { TransportMagicName } from '@mtproto2/transport';
 import { Session } from './session.js';
 import { RpcHandler, RpcError } from './rpc.js';
 import { SaltManager } from './salt-manager.js';
@@ -19,7 +19,7 @@ import { createMsgsAck, parseMsgsAck } from './ack.js';
 import { unpackContainer } from './container.js';
 import { AuthKeyExchange } from './auth-key-exchange.js';
 import type { AuthKeyResult } from './auth-key-exchange.js';
-import type { RsaPublicKey } from '@kerainmtp/crypto';
+import type { RsaPublicKey } from '@mtproto2/crypto';
 
 // Well-known constructor IDs
 const CID_RPC_RESULT = 0xf35c6d01;

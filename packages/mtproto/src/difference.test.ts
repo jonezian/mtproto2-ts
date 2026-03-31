@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { TLWriter } from '@kerainmtp/binary';
-import { TLReader } from '@kerainmtp/binary';
+import { TLWriter } from '@mtproto2/binary';
+import { TLReader } from '@mtproto2/binary';
 import {
   UPDATE_CIDS,
   extractUpdateState,

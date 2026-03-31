@@ -9,9 +9,9 @@ import {
   isGoodPrime,
   isGoodGa,
   randomBytes,
-} from '@kerainmtp/crypto';
-import type { RsaPublicKey } from '@kerainmtp/crypto';
-import { TLReader, TLWriter } from '@kerainmtp/binary';
+} from '@mtproto2/crypto';
+import type { RsaPublicKey } from '@mtproto2/crypto';
+import { TLReader, TLWriter } from '@mtproto2/binary';
 
 // Constructor IDs from mtproto.tl
 const CID = {

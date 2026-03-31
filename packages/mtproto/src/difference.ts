@@ -7,8 +7,8 @@
  * updates.getChannelDifference RPC methods.
  */
 
-import { TLReader } from '@kerainmtp/binary';
-import { TLWriter } from '@kerainmtp/binary';
+import { TLReader } from '@mtproto2/binary';
+import { TLWriter } from '@mtproto2/binary';
 
 export interface BufferedUpdate {
   constructorId: number;

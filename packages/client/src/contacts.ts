@@ -1,4 +1,4 @@
-import { TLWriter } from '@kerainmtp/binary';
+import { TLWriter } from '@mtproto2/binary';
 import type { TelegramClient } from './client.js';
 
 /**

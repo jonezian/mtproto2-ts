@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { migrate, processSession, docToSessionData, readAllSessions } from './migrate-sessions.js';
-import { MigrationManager } from '../packages/kerain/src/migration.js';
-import type { MongoClient, MongoCollection, MongoDb } from '../packages/kerain/src/session/mongodb.js';
+import { MigrationManager } from '../src/migration.js';
+import type { MongoClient, MongoCollection, MongoDb } from '../src/session/mongodb.js';
 
 function createMockMongo(docs: Map<string, Record<string, unknown>>): {
   client: MongoClient;

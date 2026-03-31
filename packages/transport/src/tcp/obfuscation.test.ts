@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { generateObfuscatedInit, TRANSPORT_MAGIC } from './obfuscation.js';
-import { AesCtr } from '@kerainmtp/crypto';
+import { AesCtr } from '@mtproto2/crypto';
 import { AbridgedTransport } from './abridged.js';
 import { IntermediateTransport } from './intermediate.js';
 

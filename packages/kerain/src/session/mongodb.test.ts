@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MongoSession } from './mongodb.js';
 import type { MongoClient, MongoCollection, MongoDb } from './mongodb.js';
-import type { SessionData } from '@kerainmtp/client';
+import type { SessionData } from '@mtproto2/client';
 
 function makeSessionData(overrides?: Partial<SessionData>): SessionData {
   return {

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ContactPool } from './contact-pool.js';
 import type { ContactEntry } from './contact-pool.js';
-import type { TelegramClient } from '@kerainmtp/client';
+import type { TelegramClient } from '@mtproto2/client';
 
 function createMockClient(): TelegramClient {
   return {} as unknown as TelegramClient;

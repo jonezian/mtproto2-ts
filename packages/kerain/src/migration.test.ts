@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MigrationManager } from './migration.js';
-import type { SessionData } from '@kerainmtp/client';
-import type { TelegramClient } from '@kerainmtp/client';
+import type { SessionData } from '@mtproto2/client';
+import type { TelegramClient } from '@mtproto2/client';
 
 function makeSessionData(overrides?: Partial<SessionData>): SessionData {
   return {

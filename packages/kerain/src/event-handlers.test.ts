@@ -13,7 +13,7 @@ import type {
   RawChatActionUpdate,
 } from './event-handlers.js';
 import type { RedisPublisher } from './publisher.js';
-import type { TelegramClient } from '@kerainmtp/client';
+import type { TelegramClient } from '@mtproto2/client';
 
 function createMockPublisher(): RedisPublisher & {
   publishTelegramMessage: ReturnType<typeof vi.fn>;

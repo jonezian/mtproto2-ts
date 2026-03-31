@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { TLWriter, TLReader } from '@kerainmtp/binary';
+import { TLWriter, TLReader } from '@mtproto2/binary';
 
 // Constructor IDs
 const CID = {

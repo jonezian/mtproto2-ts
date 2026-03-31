@@ -1,4 +1,4 @@
-import { TLWriter } from '@kerainmtp/binary';
+import { TLWriter } from '@mtproto2/binary';
 
 /**
  * Entity types that can be cached.

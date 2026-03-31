@@ -19,9 +19,9 @@
  *   --output      Output file path for JSON export (optional)
  */
 
-import type { MongoClient, MongoCollection } from '../packages/kerain/src/session/mongodb.js';
-import { MigrationManager } from '../packages/kerain/src/migration.js';
-import type { SessionData } from '../packages/client/src/session/abstract.js';
+import type { MongoClient, MongoCollection } from '../src/session/mongodb.js';
+import { MigrationManager } from '../src/migration.js';
+import type { SessionData } from '../../client/src/session/abstract.js';
 
 /**
  * Parse command line arguments into a key-value map.

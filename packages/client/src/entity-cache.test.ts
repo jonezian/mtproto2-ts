@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { TLReader } from '@kerainmtp/binary';
+import { TLReader } from '@mtproto2/binary';
 import { EntityCache } from './entity-cache.js';
 
 // InputPeer constructor IDs

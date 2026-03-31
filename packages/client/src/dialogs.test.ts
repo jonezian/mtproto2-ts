@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { TLReader, TLWriter } from '@kerainmtp/binary';
+import { TLReader, TLWriter } from '@mtproto2/binary';
 import { getDialogs, getPeerDialogs, DIALOGS_CID } from './dialogs.js';
 import { TelegramClient } from './client.js';
 import { MemorySession } from './session/memory.js';

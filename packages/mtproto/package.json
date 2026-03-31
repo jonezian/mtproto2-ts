@@ -1,16 +1,21 @@
 {
-  "name": "@kerainmtp/mtproto",
+  "name": "@mtproto2/mtproto",
   "version": "0.1.0",
   "type": "module",
+  "description": "MTProto 2.0 protocol engine — encryption, sessions, RPC, updates",
+  "license": "MIT",
+  "keywords": ["telegram", "mtproto", "mtproto2", "typescript"],
+  "repository": { "type": "git", "url": "https://github.com/jonezian/KerainMTP.git", "directory": "packages/mtproto" },
+  "engines": { "node": ">=22" },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc"
   },
   "dependencies": {
-    "@kerainmtp/crypto": "*",
-    "@kerainmtp/binary": "*",
-    "@kerainmtp/transport": "*",
-    "@kerainmtp/tl-types": "*"
+    "@mtproto2/crypto": "*",
+    "@mtproto2/binary": "*",
+    "@mtproto2/transport": "*",
+    "@mtproto2/tl-types": "*"
   }
 }

@@ -1,4 +1,4 @@
-import { AesCtr, randomBytes } from '@kerainmtp/crypto';
+import { AesCtr, randomBytes } from '@mtproto2/crypto';
 import { Transport } from '../abstract.js';
 import { TcpConnection } from './connection.js';
 

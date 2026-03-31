@@ -7,8 +7,8 @@ import {
   modPow,
   randomBytes,
   factorizePQ,
-} from '@kerainmtp/crypto';
-import { TLReader, TLWriter } from '@kerainmtp/binary';
+} from '@mtproto2/crypto';
+import { TLReader, TLWriter } from '@mtproto2/binary';
 import {
   AuthKeyExchange,
   deriveTmpAesKeyIv,

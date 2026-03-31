@@ -1,7 +1,12 @@
 {
-  "name": "@kerainmtp/crypto",
+  "name": "@mtproto2/crypto",
   "version": "0.1.0",
   "type": "module",
+  "description": "Cryptographic primitives for MTProto 2.0 — AES-IGE, RSA-PAD, DH, PQ",
+  "license": "MIT",
+  "keywords": ["telegram", "mtproto", "mtproto2", "typescript"],
+  "repository": { "type": "git", "url": "https://github.com/jonezian/KerainMTP.git", "directory": "packages/crypto" },
+  "engines": { "node": ">=22" },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

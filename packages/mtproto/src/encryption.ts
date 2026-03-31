@@ -6,7 +6,7 @@ import {
   calcMsgKey,
   deriveAesKeyIv,
   randomBytes,
-} from '@kerainmtp/crypto';
+} from '@mtproto2/crypto';
 
 /**
  * Encrypt an MTProto 2.0 message.

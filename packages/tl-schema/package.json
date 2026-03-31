@@ -1,7 +1,12 @@
 {
-  "name": "@kerainmtp/tl-schema",
+  "name": "@mtproto2/tl-schema",
   "version": "0.1.0",
   "type": "module",
+  "description": "TL schema parser and TypeScript code generator",
+  "license": "MIT",
+  "keywords": ["telegram", "mtproto", "mtproto2", "typescript"],
+  "repository": { "type": "git", "url": "https://github.com/jonezian/KerainMTP.git", "directory": "packages/tl-schema" },
+  "engines": { "node": ">=22" },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

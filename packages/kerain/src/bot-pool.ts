@@ -1,4 +1,4 @@
-import type { TelegramClient } from '@kerainmtp/client';
+import type { TelegramClient } from '@mtproto2/client';
 
 /**
  * Configuration for a single bot session.

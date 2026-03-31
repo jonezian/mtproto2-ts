@@ -1,7 +1,12 @@
 {
-  "name": "@kerainmtp/binary",
+  "name": "@mtproto2/binary",
   "version": "0.1.0",
   "type": "module",
+  "description": "TL binary serialization for MTProto 2.0",
+  "license": "MIT",
+  "keywords": ["telegram", "mtproto", "mtproto2", "typescript"],
+  "repository": { "type": "git", "url": "https://github.com/jonezian/KerainMTP.git", "directory": "packages/binary" },
+  "engines": { "node": ">=22" },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

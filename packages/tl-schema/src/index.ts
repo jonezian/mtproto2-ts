@@ -1,5 +1,5 @@
 /**
- * @kerainmtp/tl-schema
+ * @mtproto2/tl-schema
  *
  * TL schema parser and TypeScript code generator.
  */

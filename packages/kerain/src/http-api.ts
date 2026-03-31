@@ -1,4 +1,4 @@
-import type { TelegramClient } from '@kerainmtp/client';
+import type { TelegramClient } from '@mtproto2/client';
 import type { BotPool } from './bot-pool.js';
 import type { ContactPool } from './contact-pool.js';
 import type { RateLimiter } from './rate-limiter.js';

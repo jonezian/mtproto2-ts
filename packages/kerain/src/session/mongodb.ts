@@ -1,4 +1,4 @@
-import type { SessionStorage, SessionData } from '@kerainmtp/client';
+import type { SessionStorage, SessionData } from '@mtproto2/client';
 
 /**
  * Injectable MongoDB collection interface.

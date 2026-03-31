@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { TLReader } from '@kerainmtp/binary';
+import { TLReader } from '@mtproto2/binary';
 import {
   importContacts,
   resolveUsername,

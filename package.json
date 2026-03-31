@@ -1,9 +1,9 @@
 {
-  "name": "kerainmtp",
+  "name": "mtproto2-ts",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Full TypeScript MTProto 2.0 implementation for Kerain.online",
+  "description": "Complete TypeScript implementation of Telegram's MTProto 2.0 protocol",
   "workspaces": [
     "packages/*"
   ],

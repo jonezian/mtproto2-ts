@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { TLWriter, TLReader } from '@kerainmtp/binary';
+import { TLWriter, TLReader } from '@mtproto2/binary';
 import { FileManager } from './file-manager.js';
 import { FILE_CID } from './files.js';
 

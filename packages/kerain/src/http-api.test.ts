@@ -4,7 +4,7 @@ import type { ApiHandlers } from './http-api.js';
 import type { BotPool } from './bot-pool.js';
 import type { ContactPool, ContactEntry } from './contact-pool.js';
 import type { RateLimiter } from './rate-limiter.js';
-import type { TelegramClient } from '@kerainmtp/client';
+import type { TelegramClient } from '@mtproto2/client';
 
 function createMockClient(name: string): TelegramClient {
   return {

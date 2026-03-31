@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ShadowRunner } from './shadow-runner.js';
-import type { TelegramClient } from '@kerainmtp/client';
+import type { TelegramClient } from '@mtproto2/client';
 import type { RedisPublisher } from './publisher.js';
 
 type UpdateHandler = (data: Buffer) => void;

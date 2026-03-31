@@ -1,5 +1,5 @@
-import { TLWriter } from '@kerainmtp/binary';
-import { MTProtoConnection } from '@kerainmtp/mtproto';
+import { TLWriter } from '@mtproto2/binary';
+import { MTProtoConnection } from '@mtproto2/mtproto';
 import type { SessionStorage } from './session/abstract.js';
 import { EntityCache } from './entity-cache.js';
 import { FileManager } from './file-manager.js';
