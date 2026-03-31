@@ -25,7 +25,12 @@ function bufferToBigint(buf: Buffer): bigint {
 }
 
 /**
- * RSA_PAD encryption per MTProto specification.
+ * RSA_PAD encryption per the MTProto 2.0 specification.
+ *
+ * This implements the RSA_PAD scheme used during auth key exchange to encrypt
+ * the p_q_inner_data payload before sending it to the server. Unlike standard
+ * PKCS#1 RSA, MTProto uses a custom padding scheme that incorporates AES-IGE
+ * and SHA-256 to ensure the padded value is less than the RSA modulus.
  *
  * Algorithm:
  * 1. data_with_padding = data + random_bytes(192 - len(data))
@@ -37,8 +42,17 @@ function bufferToBigint(buf: Buffer): bigint {
  *    d. temp_key_xor = temp_key XOR SHA256(aes_encrypted)
  *    e. key_aes_encrypted = temp_key_xor + aes_encrypted (256 bytes total)
  *    f. val = BigInt(key_aes_encrypted)
- *    g. if val < n: break
+ *    g. if val < n: break (otherwise repeat with new random values)
  * 4. result = pow(val, e, n) as 256-byte big-endian
+ *
+ * @param data - The data to encrypt (must not exceed 192 bytes)
+ * @param publicKey - RSA public key with modulus n and exponent e
+ * @returns 256-byte encrypted result
+ *
+ * @example
+ * ```ts
+ * const encrypted = rsaPad(innerData, { n: rsaModulus, e: 65537n });
+ * ```
  */
 export function rsaPad(data: Buffer, publicKey: { n: bigint; e: bigint }): Buffer {
   if (data.length > 192) {
@@ -89,10 +103,18 @@ export function rsaPad(data: Buffer, publicKey: { n: bigint; e: bigint }): Buffe
 }
 
 /**
- * Known Telegram RSA public keys.
- * These are the server RSA public keys used during auth key generation.
+ * Telegram's official RSA public keys.
  *
- * Primary production key with e=65537 (0x10001).
+ * These are the server RSA public keys used during the auth key generation
+ * step of the MTProto protocol. The client uses these keys to encrypt the
+ * p_q_inner_data payload via RSA_PAD. The server selects which key to use
+ * by sending its fingerprint in the resPQ response; the client must match
+ * one of these fingerprints to proceed with the key exchange.
+ *
+ * The fingerprint is computed as the lower 64 bits of SHA-1 of the
+ * serialized (n, e) pair in TL format.
+ *
+ * Primary production key with e = 65537 (0x10001).
  */
 export const TELEGRAM_RSA_KEYS: RsaPublicKey[] = [
   {
