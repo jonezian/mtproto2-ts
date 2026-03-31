@@ -16,6 +16,7 @@
     "generate": "tsx scripts/generate.ts",
     "fetch-schema": "tsx scripts/fetch-schema.ts",
     "diff-schema": "tsx scripts/diff-schema.ts",
+    "update-schema": "tsx scripts/update-schema.ts",
     "clean": "rm -rf packages/*/dist node_modules/.cache"
   },
   "engines": {
