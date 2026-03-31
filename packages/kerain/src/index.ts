@@ -56,3 +56,29 @@ export type {
   GetDialogsOpts,
   DownloadMediaOpts,
 } from './http-api.js';
+
+// MongoDB session storage
+export { MongoSession } from './session/mongodb.js';
+export type {
+  MongoClient,
+  MongoDb,
+  MongoCollection,
+  MongoSessionOptions,
+} from './session/mongodb.js';
+
+// Migration utilities
+export { MigrationManager } from './migration.js';
+export type {
+  PortableSession,
+  HealthCheckResult,
+  SessionDiff,
+  ShadowCompareResult,
+  ValidationResult,
+} from './migration.js';
+
+// Shadow runner
+export { ShadowRunner } from './shadow-runner.js';
+export type {
+  ShadowStats,
+  ShadowRunnerOptions,
+} from './shadow-runner.js';
