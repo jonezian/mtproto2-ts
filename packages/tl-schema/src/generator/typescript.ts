@@ -44,6 +44,7 @@ function tlTypeToTs(tlType: string): string {
  */
 function sanitizeTypeName(name: string): string {
   return name
+    .replace(/[<>]/g, '_')
     .split('.')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join('');

@@ -27,15 +27,8 @@ jobs:
       - name: Generate TL types
         run: npm run generate
 
-      - name: Type check
-        run: |
-          npx tsc -p packages/binary --noEmit
-          npx tsc -p packages/crypto --noEmit
-          npx tsc -p packages/tl-schema --noEmit
-          npx tsc -p packages/transport --noEmit
-          npx tsc -p packages/mtproto --noEmit
-          npx tsc -p packages/client --noEmit
-          npx tsc -p packages/kerain --noEmit
+      - name: Type check and build
+        run: npx tsc --build
 
       - name: Lint
         run: npm run lint
