@@ -4,18 +4,20 @@
   "type": "module",
   "description": "High-level Telegram client API for MTProto 2.0",
   "license": "MIT",
-  "keywords": ["telegram", "mtproto", "mtproto2", "typescript"],
-  "repository": { "type": "git", "url": "https://github.com/jonezian/KerainMTP.git", "directory": "packages/client" },
+  "keywords": ["telegram", "mtproto", "mtproto2", "typescript", "client", "api"],
+  "repository": { "type": "git", "url": "https://github.com/jonezian/mtproto2-ts.git", "directory": "packages/client" },
   "engines": { "node": ">=22" },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "publishConfig": { "access": "public" },
   "scripts": {
     "build": "tsc"
   },
   "dependencies": {
-    "@mtproto2/binary": "*",
-    "@mtproto2/crypto": "*",
-    "@mtproto2/mtproto": "*",
-    "@mtproto2/tl-types": "*"
+    "@mtproto2/binary": "0.1.0",
+    "@mtproto2/crypto": "0.1.0",
+    "@mtproto2/mtproto": "0.1.0",
+    "@mtproto2/tl-types": "0.1.0"
   }
 }

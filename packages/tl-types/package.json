@@ -4,11 +4,13 @@
   "type": "module",
   "description": "Auto-generated TypeScript types for Telegram API layer 216",
   "license": "MIT",
-  "keywords": ["telegram", "mtproto", "mtproto2", "typescript"],
-  "repository": { "type": "git", "url": "https://github.com/jonezian/KerainMTP.git", "directory": "packages/tl-types" },
+  "keywords": ["telegram", "mtproto", "mtproto2", "typescript", "tl-types", "api"],
+  "repository": { "type": "git", "url": "https://github.com/jonezian/mtproto2-ts.git", "directory": "packages/tl-types" },
   "engines": { "node": ">=22" },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "publishConfig": { "access": "public" },
   "scripts": {
     "build": "tsc"
   }
