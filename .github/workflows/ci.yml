@@ -24,6 +24,9 @@ jobs:
 
       - run: npm ci
 
+      - name: Generate TL types
+        run: npm run generate
+
       - name: Type check
         run: npm run typecheck
 

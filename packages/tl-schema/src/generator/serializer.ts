@@ -6,19 +6,7 @@
  * to perform actual TL serialization.
  */
 
-import type { TLConstructor, TLSchema } from '../parser/types.js';
-
-/** Describes how to encode/decode a single field. */
-interface FieldDescriptor {
-  name: string;
-  type: string;
-  isFlag: boolean;
-  flagField: string | null;
-  flagIndex: number | null;
-  isTrueFlag: boolean;
-  isVector: boolean;
-  innerType: string | null;
-}
+import type { TLSchema } from '../parser/types.js';
 
 /**
  * Map a TL type to a serialization method name.
