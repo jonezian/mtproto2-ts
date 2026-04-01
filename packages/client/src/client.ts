@@ -69,6 +69,7 @@ export class TelegramClient extends TypedEventEmitter<TelegramClientEvents> {
   private readonly rsaKeys: RsaPublicKey[];
   private connection: MTProtoConnection | null = null;
   private _connected = false;
+  private _initDone = false;
 
   constructor(options: TelegramClientOptions) {
     super();
@@ -107,6 +108,7 @@ export class TelegramClient extends TypedEventEmitter<TelegramClientEvents> {
     this.connection = new MTProtoConnection({
       dcId: this.testMode ? targetDcId + 10000 : targetDcId,
       transport: 'abridged',
+      obfuscated: false, // disabled until obfuscation init bug is fixed upstream
       testMode: this.testMode,
       rsaKeys: this.rsaKeys,
     });
@@ -145,15 +147,17 @@ export class TelegramClient extends TypedEventEmitter<TelegramClientEvents> {
     }
     this._connected = true;
 
-    // Save session after successful connection (raw dcId without test mode offset)
-    const session = this.connection.getSession();
-    if (session) {
-      await this.sessionStorage.save({
-        dcId: targetDcId,
-        authKey: session.state.authKey,
-        port: 443,
-        serverAddress: '',
-      });
+    // Save session after successful connection (only for new auth keys)
+    if (!sessionData?.authKey) {
+      const session = this.connection.getSession();
+      if (session) {
+        await this.sessionStorage.save({
+          dcId: targetDcId,
+          authKey: session.state.authKey,
+          port: 443,
+          serverAddress: '',
+        });
+      }
     }
   }
 
@@ -178,7 +182,38 @@ export class TelegramClient extends TypedEventEmitter<TelegramClientEvents> {
     if (!this.connection || !this._connected) {
       throw new Error('Client is not connected');
     }
+    if (!this._initDone) {
+      this._initDone = true;
+      method = this.wrapWithInit(method);
+    }
     return this.connection.invoke(method);
+  }
+
+  /**
+   * Wrap a method call with invokeWithLayer + initConnection.
+   * Required for the first API call on a new connection per MTProto spec.
+   */
+  private wrapWithInit(query: Buffer): Buffer {
+    // initConnection#c1cd5ea9
+    const initWriter = new TLWriter(2048);
+    initWriter.writeConstructorId(0xc1cd5ea9);
+    initWriter.writeInt32(0);                      // flags
+    initWriter.writeInt32(this.apiId);
+    initWriter.writeString('mtproto2-ts');          // device_model
+    initWriter.writeString('Node.js');              // system_version
+    initWriter.writeString('0.1.0');                // app_version
+    initWriter.writeString('en');                   // system_lang_code
+    initWriter.writeString('');                     // lang_pack
+    initWriter.writeString('en');                   // lang_code
+    initWriter.writeRaw(query);
+    const initBuf = initWriter.toBuffer();
+
+    // invokeWithLayer#da9b0d0d
+    const layerWriter = new TLWriter(2048 + initBuf.length);
+    layerWriter.writeConstructorId(0xda9b0d0d);
+    layerWriter.writeInt32(216);                    // layer
+    layerWriter.writeRaw(initBuf);
+    return layerWriter.toBuffer();
   }
 
   /**

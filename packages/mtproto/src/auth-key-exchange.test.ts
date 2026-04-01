@@ -233,7 +233,8 @@ function createMockServer(
       const authKey = bigintToFixedBuffer(modPow(gb, a, KNOWN_DH_PRIME), 256);
       state.authKey = authKey;
 
-      const authKeySha1 = sha1(authKey);
+      // aux_hash = first 8 bytes of SHA1(auth_key), per MTProto spec
+      const auxHash = sha1(authKey).subarray(0, 8);
 
       let dhGenResult = options?.dhGenResult ?? 'ok';
       if (options?.retryThenOk) {
@@ -248,19 +249,19 @@ function createMockServer(
       const respWriter = new TLWriter(256);
 
       if (dhGenResult === 'ok') {
-        const hash = sha1(Buffer.concat([testNewNonce, Buffer.from([0x01]), authKeySha1]));
+        const hash = sha1(Buffer.concat([testNewNonce, Buffer.from([0x01]), auxHash]));
         respWriter.writeConstructorId(CID.dh_gen_ok);
         respWriter.writeInt128(state.nonce);
         respWriter.writeInt128(serverNonce);
         respWriter.writeInt128(hash.subarray(4, 20));
       } else if (dhGenResult === 'retry') {
-        const hash = sha1(Buffer.concat([testNewNonce, Buffer.from([0x02]), authKeySha1]));
+        const hash = sha1(Buffer.concat([testNewNonce, Buffer.from([0x02]), auxHash]));
         respWriter.writeConstructorId(CID.dh_gen_retry);
         respWriter.writeInt128(state.nonce);
         respWriter.writeInt128(serverNonce);
         respWriter.writeInt128(hash.subarray(4, 20));
       } else {
-        const hash = sha1(Buffer.concat([testNewNonce, Buffer.from([0x03]), authKeySha1]));
+        const hash = sha1(Buffer.concat([testNewNonce, Buffer.from([0x03]), auxHash]));
         respWriter.writeConstructorId(CID.dh_gen_fail);
         respWriter.writeInt128(state.nonce);
         respWriter.writeInt128(serverNonce);

@@ -49,6 +49,11 @@ export class TLWriter {
 
   writeInt64(value: bigint): void {
     this.ensureCapacity(8);
+    // TL int64 fields may carry unsigned values (e.g. RSA fingerprints)
+    // that exceed the signed int64 range. Convert to signed representation.
+    if (value >= 0x8000000000000000n) {
+      value = value - 0x10000000000000000n;
+    }
     this.buf.writeBigInt64LE(value, this.offset);
     this.offset += 8;
   }

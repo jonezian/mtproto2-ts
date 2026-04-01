@@ -373,11 +373,13 @@ export class AuthKeyExchange {
 
       const newNonceHash = dhGenReader.readInt128();
 
+      // aux_hash = first 8 bytes of SHA1(auth_key), per MTProto spec
+      const auxHash = sha1(authKey).subarray(0, 8);
+
       if (dhGenCid === CID.dh_gen_ok) {
-        // Verify new_nonce_hash1 = SHA1(new_nonce + 0x01 + SHA1(auth_key))[4:20]
-        const authKeySha1 = sha1(authKey);
+        // Verify new_nonce_hash1 = SHA1(new_nonce + 0x01 + aux_hash)[4:20]
         const expectedHash = sha1(
-          Buffer.concat([newNonce, Buffer.from([0x01]), authKeySha1]),
+          Buffer.concat([newNonce, Buffer.from([0x01]), auxHash]),
         ).subarray(4, 20);
 
         if (!crypto.timingSafeEqual(newNonceHash, expectedHash)) {
@@ -389,24 +391,22 @@ export class AuthKeyExchange {
 
         return { authKey, authKeyId, serverSalt, timeOffset };
       } else if (dhGenCid === CID.dh_gen_retry) {
-        // Verify new_nonce_hash2 = SHA1(new_nonce + 0x02 + SHA1(auth_key))[4:20]
-        const authKeySha1 = sha1(authKey);
+        // Verify new_nonce_hash2 = SHA1(new_nonce + 0x02 + aux_hash)[4:20]
         const expectedHash = sha1(
-          Buffer.concat([newNonce, Buffer.from([0x02]), authKeySha1]),
+          Buffer.concat([newNonce, Buffer.from([0x02]), auxHash]),
         ).subarray(4, 20);
 
         if (!crypto.timingSafeEqual(newNonceHash, expectedHash)) {
           throw new Error('new_nonce_hash2 verification failed');
         }
 
-        // Set retry_id to auth_key_aux_hash = SHA1(auth_key)[0:8] as int64 LE
-        retryId = sha1(authKey).subarray(0, 8).readBigInt64LE(0);
+        // Set retry_id to auth_key_aux_hash as int64 LE
+        retryId = auxHash.readBigInt64LE(0);
         // Continue the loop to retry
       } else if (dhGenCid === CID.dh_gen_fail) {
-        // Verify new_nonce_hash3 = SHA1(new_nonce + 0x03 + SHA1(auth_key))[4:20]
-        const authKeySha1 = sha1(authKey);
+        // Verify new_nonce_hash3 = SHA1(new_nonce + 0x03 + aux_hash)[4:20]
         const expectedHash = sha1(
-          Buffer.concat([newNonce, Buffer.from([0x03]), authKeySha1]),
+          Buffer.concat([newNonce, Buffer.from([0x03]), auxHash]),
         ).subarray(4, 20);
 
         if (!crypto.timingSafeEqual(newNonceHash, expectedHash)) {

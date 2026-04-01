@@ -86,6 +86,7 @@ export function generateObfuscatedInit(
   const encrypted = encryptor.encrypt(initBytes);
 
   // Overwrite initBytes[56:64] with encrypted[56:64]
+  // Bytes 0:55 remain plaintext (contain keys), bytes 56:64 are encrypted (contain magic)
   encrypted.copy(initBytes, 56, 56, 64);
 
   return { initBytes, encryptor, decryptor };
