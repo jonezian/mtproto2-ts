@@ -64,9 +64,9 @@ describe('Obfuscation', () => {
 
       // The transmitted initBytes should NOT have plaintext magic at bytes 56-59
       // because the magic was encrypted along with the rest
-      const bytes56 = initBytes.readUInt32LE(56);
-      // It's theoretically possible (but astronomically unlikely with AES-CTR)
-      // that encryption produces the same value. We run multiple times to be safe.
+      // Verify the first generated init doesn't have plaintext magic
+      expect(initBytes.readUInt32LE(56)).not.toBe(magic);
+      // Run multiple times to be safe (astronomically unlikely with AES-CTR)
       let allMatchMagic = true;
       for (let i = 0; i < 20; i++) {
         const { initBytes: ib } = generateObfuscatedInit(magic);
