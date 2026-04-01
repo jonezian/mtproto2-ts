@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { TLReader } from '@mtproto2/binary';
+import { TLReader, TLWriter } from '@mtproto2/binary';
 import {
   serializeSaveFilePart,
   serializeSaveBigFilePart,
@@ -473,19 +473,61 @@ describe('serializeInputFileLocation', () => {
   });
 
   it('should serialize peer_photo file location', () => {
+    // Create a mock InputPeer buffer (inputPeerUser: cid + user_id + access_hash)
+    const peerWriter = new TLWriter(20);
+    peerWriter.writeConstructorId(0xdde8a54c); // inputPeerUser
+    peerWriter.writeInt64(123n);
+    peerWriter.writeInt64(456n);
+    const peerBuf = peerWriter.toBuffer();
+
     const buf = serializeInputFileLocation({
       type: 'peer_photo',
       id: 333n,
       accessHash: 444n,
       fileReference: Buffer.from([0xAB]),
+      peer: peerBuf,
+      big: false,
     });
 
     const r = new TLReader(buf);
     expect(r.readConstructorId()).toBe(FILE_CID.inputPeerPhotoFileLocation);
-    expect(r.readInt32()).toBe(0); // flags
-    expect(r.readInt64()).toBe(333n); // photo_id
-    expect(r.readInt64()).toBe(444n); // accessHash
-    expect(r.readBytes()).toEqual(Buffer.from([0xAB]));
+    expect(r.readInt32()).toBe(0);     // flags (not big)
+    expect(r.readConstructorId()).toBe(0xdde8a54c); // inputPeerUser
+    expect(r.readInt64()).toBe(123n);  // peer user_id
+    expect(r.readInt64()).toBe(456n);  // peer access_hash
+    expect(r.readInt64()).toBe(333n);  // photo_id
+  });
+
+  it('should serialize peer_photo with big flag', () => {
+    const peerWriter = new TLWriter(20);
+    peerWriter.writeConstructorId(0xdde8a54c);
+    peerWriter.writeInt64(100n);
+    peerWriter.writeInt64(200n);
+    const peerBuf = peerWriter.toBuffer();
+
+    const buf = serializeInputFileLocation({
+      type: 'peer_photo',
+      id: 999n,
+      accessHash: 0n,
+      fileReference: Buffer.alloc(0),
+      peer: peerBuf,
+      big: true,
+    });
+
+    const r = new TLReader(buf);
+    expect(r.readConstructorId()).toBe(FILE_CID.inputPeerPhotoFileLocation);
+    expect(r.readInt32()).toBe(1); // flags: big=1
+  });
+
+  it('should throw for peer_photo without peer', () => {
+    expect(() =>
+      serializeInputFileLocation({
+        type: 'peer_photo',
+        id: 1n,
+        accessHash: 2n,
+        fileReference: Buffer.alloc(0),
+      }),
+    ).toThrow('peer is required');
   });
 
   it('should throw for unknown type', () => {

@@ -148,6 +148,47 @@ describe('AbridgedTransport', () => {
     });
   });
 
+  describe('frame size validation', () => {
+    it('rejects frame with payload exceeding MAX_FRAME_PAYLOAD', () => {
+      const transport = makeTransport();
+      const errors: Error[] = [];
+      transport.on('error', (err: Error) => errors.push(err));
+
+      // Use the 4-byte header format (0x7f + 3 bytes LE word count)
+      // We need wordCount * 4 > 16 MiB => wordCount > 4194304
+      // Use wordCount = 4194305 (0x400001)
+      const buf = Buffer.alloc(4);
+      buf[0] = 0x7f;
+      buf[1] = 0x01; // 0x400001 & 0xff
+      buf[2] = 0x00; // (0x400001 >> 8) & 0xff
+      buf[3] = 0x40; // (0x400001 >> 16) & 0xff
+
+      const decoded = transport.decodePacket(buf);
+      expect(decoded.length).toBe(0);
+      expect(errors.length).toBe(1);
+      expect(errors[0]!.message).toMatch(/Frame payload too large/);
+    });
+
+    it('does not wedge on invalid first byte (>=0x80)', () => {
+      const transport = makeTransport();
+      const errors: Error[] = [];
+      transport.on('error', (err: Error) => errors.push(err));
+
+      // Prepend an invalid byte (0x80) followed by a valid small frame
+      const validPayload = Buffer.alloc(8, 0xaa);
+      const validFrame = transport.encodePacket(validPayload);
+
+      const buf = Buffer.concat([Buffer.from([0x80]), validFrame]);
+
+      const decoded = transport.decodePacket(buf);
+      // The invalid byte should be skipped and the valid frame decoded
+      expect(decoded.length).toBe(1);
+      expect(decoded[0]).toEqual(validPayload);
+      expect(errors.length).toBe(1);
+      expect(errors[0]!.message).toMatch(/Invalid abridged length byte/);
+    });
+  });
+
   describe('round-trip', () => {
     it('encode then decode small payload', () => {
       const transport = makeTransport();

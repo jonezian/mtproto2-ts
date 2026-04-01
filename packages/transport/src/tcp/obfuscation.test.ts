@@ -57,6 +57,46 @@ describe('Obfuscation', () => {
     });
   });
 
+  describe('init magic encryption', () => {
+    it('magic bytes at offset 56 are encrypted (not plaintext)', () => {
+      const magic = TRANSPORT_MAGIC.intermediate; // 0xeeeeeeee
+      const { initBytes } = generateObfuscatedInit(magic);
+
+      // The transmitted initBytes should NOT have plaintext magic at bytes 56-59
+      // because the magic was encrypted along with the rest
+      const bytes56 = initBytes.readUInt32LE(56);
+      // It's theoretically possible (but astronomically unlikely with AES-CTR)
+      // that encryption produces the same value. We run multiple times to be safe.
+      let allMatchMagic = true;
+      for (let i = 0; i < 20; i++) {
+        const { initBytes: ib } = generateObfuscatedInit(magic);
+        if (ib.readUInt32LE(56) !== magic) {
+          allMatchMagic = false;
+          break;
+        }
+      }
+      expect(allMatchMagic).toBe(false);
+    });
+
+    it('server can decrypt init and find magic at offset 56', () => {
+      const magic = TRANSPORT_MAGIC.intermediate;
+      const { initBytes } = generateObfuscatedInit(magic);
+
+      // Server derives keys from the plaintext bytes 0-55
+      const encryptKey = Buffer.alloc(32);
+      initBytes.copy(encryptKey, 0, 8, 40);
+      const encryptIv = Buffer.alloc(16);
+      initBytes.copy(encryptIv, 0, 40, 56);
+
+      // Server creates a cipher with the same key/iv and decrypts
+      const serverCipher = new AesCtr(encryptKey, encryptIv);
+      const decrypted = serverCipher.encrypt(initBytes); // CTR: encrypt === decrypt
+
+      // After decryption, bytes 56-59 should contain the magic
+      expect(decrypted.readUInt32LE(56)).toBe(magic);
+    });
+  });
+
   describe('encrypt/decrypt round-trip', () => {
     it('data encrypted by encryptor can be decrypted by corresponding decryptor', () => {
       // Simulate two sides: the client sends, the server receives.

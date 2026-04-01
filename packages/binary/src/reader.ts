@@ -119,6 +119,8 @@ export class TLReader {
     throw new Error(`Invalid Bool constructor ID: 0x${id.toString(16).padStart(8, '0')}`);
   }
 
+  static MAX_VECTOR_COUNT = 1_000_000;
+
   readVector<T>(readItem: () => T): T[] {
     const cid = this.readUInt32();
     if (cid !== VECTOR_CID) {
@@ -127,6 +129,9 @@ export class TLReader {
       );
     }
     const count = this.readInt32();
+    if (count < 0 || count > TLReader.MAX_VECTOR_COUNT) {
+      throw new RangeError(`Vector count ${count} exceeds maximum allowed ${TLReader.MAX_VECTOR_COUNT}`);
+    }
     const items: T[] = [];
     for (let i = 0; i < count; i++) {
       items.push(readItem());

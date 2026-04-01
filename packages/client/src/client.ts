@@ -1,5 +1,7 @@
 import { TLWriter } from '@mtproto2/binary';
-import { MTProtoConnection } from '@mtproto2/mtproto';
+import { MTProtoConnection, Session } from '@mtproto2/mtproto';
+import { TELEGRAM_RSA_KEYS, calcAuthKeyId } from '@mtproto2/crypto';
+import type { RsaPublicKey } from '@mtproto2/crypto';
 import type { SessionStorage } from './session/abstract.js';
 import { EntityCache } from './entity-cache.js';
 import { FileManager } from './file-manager.js';
@@ -32,6 +34,7 @@ export interface TelegramClientOptions {
   dcId?: number;
   testMode?: boolean;
   autoReconnect?: boolean;
+  rsaKeys?: RsaPublicKey[];
 }
 
 /**
@@ -63,6 +66,7 @@ export class TelegramClient extends TypedEventEmitter<TelegramClientEvents> {
   private readonly dcId: number;
   private readonly testMode: boolean;
   private readonly _autoReconnect: boolean;
+  private readonly rsaKeys: RsaPublicKey[];
   private connection: MTProtoConnection | null = null;
   private _connected = false;
 
@@ -74,6 +78,7 @@ export class TelegramClient extends TypedEventEmitter<TelegramClientEvents> {
     this.dcId = options.dcId ?? 2;
     this.testMode = options.testMode ?? false;
     this._autoReconnect = options.autoReconnect ?? true;
+    this.rsaKeys = options.rsaKeys ?? TELEGRAM_RSA_KEYS;
     this.entityCache = new EntityCache();
     this.fileManager = new FileManager({
       invoke: (data: Buffer) => this.invoke(data),
@@ -103,6 +108,7 @@ export class TelegramClient extends TypedEventEmitter<TelegramClientEvents> {
       dcId: this.testMode ? targetDcId + 10000 : targetDcId,
       transport: 'abridged',
       testMode: this.testMode,
+      rsaKeys: this.rsaKeys,
     });
 
     // Forward events from the connection
@@ -124,15 +130,26 @@ export class TelegramClient extends TypedEventEmitter<TelegramClientEvents> {
       this.emit('update', data);
     });
 
-    await this.connection.connect();
+    // Reuse existing session auth key if available
+    if (sessionData?.authKey) {
+      const authKeyId = calcAuthKeyId(sessionData.authKey);
+      const existingSession = new Session(
+        sessionData.authKey,
+        authKeyId,
+        0n,  // salt will be updated by server via new_session_created
+        0,   // timeOffset will be re-calibrated
+      );
+      await this.connection.connect(existingSession);
+    } else {
+      await this.connection.connect();
+    }
     this._connected = true;
 
-    // Save session after successful connection
+    // Save session after successful connection (raw dcId without test mode offset)
     const session = this.connection.getSession();
     if (session) {
-      const dc = this.testMode ? targetDcId + 10000 : targetDcId;
       await this.sessionStorage.save({
-        dcId: dc,
+        dcId: targetDcId,
         authKey: session.state.authKey,
         port: 443,
         serverAddress: '',

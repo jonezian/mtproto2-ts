@@ -1,6 +1,8 @@
 import { Transport } from '../abstract.js';
 import { TcpConnection } from './connection.js';
 
+const MAX_FRAME_PAYLOAD = 16 * 1024 * 1024;
+
 /**
  * Abridged transport — the simplest MTProto transport.
  *
@@ -92,8 +94,15 @@ export class AbridgedTransport extends Transport {
         payloadLen =
           (this.recvBuf[1]! | (this.recvBuf[2]! << 8) | (this.recvBuf[3]! << 16)) * 4;
       } else {
-        // Invalid first byte
+        // Invalid first byte — skip it and try again
         this.emit('error', new Error(`Invalid abridged length byte: 0x${firstByte.toString(16)}`));
+        this.recvBuf = this.recvBuf.subarray(1);
+        continue;
+      }
+
+      if (payloadLen > MAX_FRAME_PAYLOAD) {
+        this.emit('error', new Error(`Frame payload too large: ${payloadLen} bytes (max ${MAX_FRAME_PAYLOAD})`));
+        this.recvBuf = Buffer.alloc(0);
         break;
       }
 

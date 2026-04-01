@@ -28,13 +28,20 @@ const CID = {
  * of InputPeer TL objects needed for API calls.
  */
 export class EntityCache {
+  static readonly MAX_SIZE = 10_000;
+
   private cache = new Map<bigint, CachedEntity>();
 
   /**
    * Store an entity in the cache.
+   * Evicts the oldest entry when the cache exceeds MAX_SIZE.
    */
   set(id: bigint, accessHash: bigint, type: EntityType): void {
     this.cache.set(id, { id, accessHash, type });
+    if (this.cache.size > EntityCache.MAX_SIZE) {
+      const oldest = this.cache.keys().next().value;
+      if (oldest !== undefined) this.cache.delete(oldest);
+    }
   }
 
   /**

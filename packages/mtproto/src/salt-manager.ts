@@ -23,7 +23,9 @@ export class SaltManager {
    */
   addSalts(salts: FutureSalt[]): void {
     this.salts.push(...salts);
-    // Sort by validSince ascending
+    // Remove expired salts and sort by validSince ascending
+    const now = Math.floor(Date.now() / 1000);
+    this.salts = this.salts.filter(s => s.validUntil > now);
     this.salts.sort((a, b) => a.validSince - b.validSince);
   }
 

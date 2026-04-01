@@ -202,6 +202,8 @@ export function serializeInputFileLocation(opts: {
   accessHash: bigint;
   fileReference: Buffer;
   thumbSize?: string;
+  peer?: Buffer;
+  big?: boolean;
 }): Buffer {
   const w = new TLWriter(256);
 
@@ -219,14 +221,13 @@ export function serializeInputFileLocation(opts: {
     w.writeString(opts.thumbSize ?? '');
   } else if (opts.type === 'peer_photo') {
     // inputPeerPhotoFileLocation#37c1011c flags:# big:flags.0?true peer:InputPeer photo_id:long
-    // Simplified: flags=0 (not big), peer is encoded externally
     w.writeConstructorId(CID.inputPeerPhotoFileLocation);
-    w.writeInt32(0); // flags: not big
-    // The peer would be serialized externally; for our purposes we write
-    // a minimal inputPeerUser-like stub using id and accessHash
-    w.writeInt64(opts.id);     // photo_id
-    w.writeInt64(opts.accessHash); // not standard but used for tracking
-    w.writeBytes(opts.fileReference);
+    w.writeInt32(opts.big ? 1 : 0); // flags: big=flags.0
+    if (!opts.peer) {
+      throw new Error('peer is required for peer_photo file location');
+    }
+    w.writeRaw(opts.peer);   // InputPeer (pre-serialized)
+    w.writeInt64(opts.id);    // photo_id
   } else {
     throw new Error(`Unknown file location type: ${String(opts.type)}`);
   }

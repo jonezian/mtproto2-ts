@@ -104,6 +104,23 @@ describe('IntermediateTransport', () => {
     });
   });
 
+  describe('frame size validation', () => {
+    it('rejects frame with payload exceeding MAX_FRAME_PAYLOAD', () => {
+      const transport = makeTransport();
+      const errors: Error[] = [];
+      transport.on('error', (err: Error) => errors.push(err));
+
+      // Craft a buffer with a length field exceeding 16 MiB
+      const buf = Buffer.alloc(4);
+      buf.writeUInt32LE(16 * 1024 * 1024 + 1, 0); // 16 MiB + 1
+
+      const decoded = transport.decodePacket(buf);
+      expect(decoded.length).toBe(0);
+      expect(errors.length).toBe(1);
+      expect(errors[0]!.message).toMatch(/Frame payload too large/);
+    });
+  });
+
   describe('round-trip', () => {
     it('encode/decode round-trip preserves data', () => {
       const transport = makeTransport();

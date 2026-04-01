@@ -2,6 +2,8 @@ import { randomBytes } from '@mtproto2/crypto';
 import { Transport } from '../abstract.js';
 import { TcpConnection } from './connection.js';
 
+const MAX_FRAME_PAYLOAD = 16 * 1024 * 1024;
+
 /**
  * Padded Intermediate transport.
  *
@@ -76,6 +78,13 @@ export class PaddedIntermediateTransport extends Transport {
 
     while (this.recvBuf.length >= 4) {
       const totalDataLen = this.recvBuf.readUInt32LE(0);
+
+      if (totalDataLen > MAX_FRAME_PAYLOAD) {
+        this.emit('error', new Error(`Frame payload too large: ${totalDataLen} bytes (max ${MAX_FRAME_PAYLOAD})`));
+        this.recvBuf = Buffer.alloc(0);
+        break;
+      }
+
       const totalLen = 4 + totalDataLen;
 
       if (this.recvBuf.length < totalLen) {

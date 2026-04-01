@@ -135,6 +135,57 @@ describe('FullTransport', () => {
       expect(errors[0]!.message).toMatch(/CRC32 mismatch/);
     });
 
+    it('rejects frame exceeding MAX_FRAME_PAYLOAD', () => {
+      const transport = makeTransport();
+      const errors: Error[] = [];
+      transport.on('error', (err: Error) => errors.push(err));
+
+      // Craft a buffer with totalLen > MAX_FRAME_PAYLOAD + 12
+      const buf = Buffer.alloc(12);
+      buf.writeUInt32LE(16 * 1024 * 1024 + 13, 0); // exceeds max
+
+      const decoded = transport.decodePacket(buf);
+      expect(decoded.length).toBe(0);
+      expect(errors.length).toBe(1);
+      expect(errors[0]!.message).toMatch(/Frame too large/);
+    });
+
+    it('skips frame on sequence number mismatch', () => {
+      const decoder = makeTransport();
+      const errors: Error[] = [];
+      decoder.on('error', (err: Error) => errors.push(err));
+
+      // Build two frames: first with seq=5 (wrong, expected 0), second with seq=0 (correct after skip)
+      // Frame 1: wrong seq
+      const payload1 = Buffer.alloc(8, 0x11);
+      const totalLen1 = 12 + payload1.length;
+      const frame1 = Buffer.alloc(totalLen1);
+      frame1.writeUInt32LE(totalLen1, 0);
+      frame1.writeUInt32LE(5, 4); // wrong seq (expected 0)
+      payload1.copy(frame1, 8);
+      const crc1 = crc32(frame1.subarray(0, totalLen1 - 4));
+      frame1.writeUInt32LE(crc1, totalLen1 - 4);
+
+      // Frame 2: correct seq (still 0, since frame1 was skipped)
+      const payload2 = Buffer.alloc(8, 0x22);
+      const totalLen2 = 12 + payload2.length;
+      const frame2 = Buffer.alloc(totalLen2);
+      frame2.writeUInt32LE(totalLen2, 0);
+      frame2.writeUInt32LE(0, 4); // correct seq
+      payload2.copy(frame2, 8);
+      const crc2 = crc32(frame2.subarray(0, totalLen2 - 4));
+      frame2.writeUInt32LE(crc2, totalLen2 - 4);
+
+      const combined = Buffer.concat([frame1, frame2]);
+      const decoded = decoder.decodePacket(combined);
+
+      // First frame should be skipped (seq mismatch), second should decode
+      expect(decoded.length).toBe(1);
+      expect(decoded[0]).toEqual(payload2);
+      expect(errors.length).toBe(1);
+      expect(errors[0]!.message).toMatch(/Sequence number mismatch/);
+    });
+
     it('handles partial frame (buffers remaining)', () => {
       const encoder = makeTransport();
       const decoder = makeTransport();

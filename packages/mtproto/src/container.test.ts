@@ -59,6 +59,20 @@ describe('container', () => {
     expect(unpacked[2]!.body[0]).toBe(0xFF);
   });
 
+  it('should reject container with count > 1024', () => {
+    const buf = Buffer.alloc(8);
+    buf.writeUInt32LE(0x73f1f8dc, 0); // container CID
+    buf.writeInt32LE(2000, 4);         // count = 2000
+    expect(() => unpackContainer(buf)).toThrow('Invalid container message count: 2000 (max 1024)');
+  });
+
+  it('should reject container with negative count', () => {
+    const buf = Buffer.alloc(8);
+    buf.writeUInt32LE(0x73f1f8dc, 0);
+    buf.writeInt32LE(-1, 4);
+    expect(() => unpackContainer(buf)).toThrow('Invalid container message count: -1 (max 1024)');
+  });
+
   it('should correctly identify containers with isContainer', () => {
     const packed = packContainer([{ msgId: 1n, seqNo: 0, body: Buffer.alloc(4) }]);
     expect(isContainer(packed)).toBe(true);

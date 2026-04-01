@@ -77,13 +77,13 @@ export function generateObfuscatedInit(
   const encryptor = new AesCtr(encryptKey, encryptIv);
   const decryptor = new AesCtr(decryptKey, decryptIv);
 
-  // Encrypt the 64 bytes with the encrypt cipher
-  const encrypted = encryptor.encrypt(initBytes);
-
-  // Write transport magic into encrypted[56:60]
+  // Write transport magic into plaintext initBytes BEFORE encryption
   const magicBuf = Buffer.alloc(4);
   magicBuf.writeUInt32LE(magic, 0);
-  magicBuf.copy(encrypted, 56);
+  magicBuf.copy(initBytes, 56);
+
+  // Encrypt the 64 bytes (including magic) with the encrypt cipher
+  const encrypted = encryptor.encrypt(initBytes);
 
   // Overwrite initBytes[56:64] with encrypted[56:64]
   encrypted.copy(initBytes, 56, 56, 64);
@@ -103,7 +103,6 @@ export class ObfuscatedTransport extends Transport {
   private encryptor: AesCtr | null = null;
   private decryptor: AesCtr | null = null;
   private magic: number;
-  private recvBuf = Buffer.alloc(0);
 
   constructor(innerTransport: Transport, magic?: TransportMagicName | number) {
     super();
@@ -133,11 +132,7 @@ export class ObfuscatedTransport extends Transport {
     this.decryptor = decryptor;
 
     this.tcp.on('data', (data: Buffer) => {
-      // Decrypt incoming data
       const decrypted = this.decryptor!.decrypt(data);
-      this.recvBuf = Buffer.concat([this.recvBuf, decrypted]);
-
-      // Feed decrypted data to the inner transport's decoder
       const frames = this.innerTransport.decodePacket(decrypted);
       for (const frame of frames) {
         this.emit('data', frame);

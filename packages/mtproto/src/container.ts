@@ -83,6 +83,10 @@ export function unpackContainer(data: Buffer): InnerMessage[] {
   const count = data.readInt32LE(offset);
   offset += 4;
 
+  if (count < 0 || count > 1024) {
+    throw new Error(`Invalid container message count: ${count} (max 1024)`);
+  }
+
   const messages: InnerMessage[] = [];
 
   for (let i = 0; i < count; i++) {

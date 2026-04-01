@@ -309,6 +309,24 @@ describe('TLReader', () => {
       const reader = new TLReader(buf);
       expect(() => reader.readVector(() => reader.readInt32())).toThrow('Invalid Vector constructor ID');
     });
+
+    it('throws on negative vector count', () => {
+      const buf = Buffer.alloc(8);
+      buf.writeUInt32LE(0x1cb5c415, 0);
+      buf.writeInt32LE(-1, 4);
+
+      const reader = new TLReader(buf);
+      expect(() => reader.readVector(() => reader.readInt32())).toThrow('Vector count -1 exceeds maximum');
+    });
+
+    it('throws on vector count exceeding MAX_VECTOR_COUNT', () => {
+      const buf = Buffer.alloc(8);
+      buf.writeUInt32LE(0x1cb5c415, 0);
+      buf.writeInt32LE(2_000_000, 4);
+
+      const reader = new TLReader(buf);
+      expect(() => reader.readVector(() => reader.readInt32())).toThrow('Vector count 2000000 exceeds maximum');
+    });
   });
 
   describe('readRaw', () => {

@@ -2,6 +2,8 @@ import { Transport } from '../abstract.js';
 import { TcpConnection } from './connection.js';
 import { crc32 } from '../crc32.js';
 
+const MAX_FRAME_PAYLOAD = 16 * 1024 * 1024;
+
 /**
  * Full transport — includes sequence numbers and CRC32 verification.
  *
@@ -89,6 +91,12 @@ export class FullTransport extends Transport {
         break;
       }
 
+      if (totalLen > MAX_FRAME_PAYLOAD + 12) {
+        this.emit('error', new Error(`Frame too large: ${totalLen} bytes (max ${MAX_FRAME_PAYLOAD + 12})`));
+        this.recvBuf = Buffer.alloc(0);
+        break;
+      }
+
       if (this.recvBuf.length < totalLen) {
         break; // Partial frame
       }
@@ -116,6 +124,8 @@ export class FullTransport extends Transport {
           'error',
           new Error(`Sequence number mismatch: expected ${this.recvSeq}, got ${seq}`),
         );
+        this.recvBuf = this.recvBuf.subarray(totalLen);
+        continue;
       }
       this.recvSeq++;
 

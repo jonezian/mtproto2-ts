@@ -1,4 +1,5 @@
 import { EventEmitter } from 'node:events';
+import { gunzipSync } from 'node:zlib';
 import { Transport } from '@mtproto2/transport';
 import {
   AbridgedTransport,
@@ -137,7 +138,11 @@ export class MTProtoConnection extends EventEmitter {
   private dcManager: DCManager;
   private ackQueue: bigint[] = [];
   private connected = false;
+  private reconnecting = false;
   private ackTimer: ReturnType<typeof setInterval> | null = null;
+  private recentMsgIds = new Set<bigint>();
+  private static readonly MAX_RECENT_MSG_IDS = 1000;
+  private static readonly MSG_ID_TIME_TOLERANCE = 300; // seconds
   private readonly options: Required<Pick<MTProtoConnectionOptions, 'dcId' | 'transport' | 'obfuscated' | 'testMode'>> & { rsaKeys?: RsaPublicKey[] };
 
   constructor(options: MTProtoConnectionOptions) {
@@ -336,6 +341,25 @@ export class MTProtoConnection extends EventEmitter {
         return;
       }
 
+      // msg_id time validation (must be within tolerance of adjusted local time)
+      const msgTime = Number(decrypted.msgId >> 32n);
+      const localTime = Math.floor(Date.now() / 1000) + (this.session.state.timeOffset ?? 0);
+      const timeDiff = Math.abs(msgTime - localTime);
+      if (timeDiff > MTProtoConnection.MSG_ID_TIME_TOLERANCE) {
+        this.emit('error', new Error(`msg_id time drift too large: ${timeDiff}s`));
+        return;
+      }
+
+      // msg_id replay protection
+      if (this.recentMsgIds.has(decrypted.msgId)) {
+        return; // duplicate message, silently drop
+      }
+      this.recentMsgIds.add(decrypted.msgId);
+      if (this.recentMsgIds.size > MTProtoConnection.MAX_RECENT_MSG_IDS) {
+        const first = this.recentMsgIds.values().next().value;
+        if (first !== undefined) this.recentMsgIds.delete(first);
+      }
+
       this.processMessage(decrypted.msgId, decrypted.seqNo, decrypted.data);
     } catch (err) {
       this.emit('error', err instanceof Error ? err : new Error(String(err)));
@@ -376,7 +400,7 @@ export class MTProtoConnection extends EventEmitter {
         break;
 
       case CID_BAD_MSG_NOTIFICATION:
-        this.handleBadMsgNotification(data);
+        this.handleBadMsgNotification(msgId, data);
         break;
 
       case CID_BAD_SERVER_SALT:
@@ -392,8 +416,7 @@ export class MTProtoConnection extends EventEmitter {
         break;
 
       case CID_GZ_PACKED:
-        // gzip_packed — not handled yet (would need zlib decompression)
-        this.emit('error', new Error('gzip_packed not yet implemented'));
+        this.handleGzipPacked(msgId, _seqNo, data);
         break;
 
       case CID_MSGS_STATE_REQ:
@@ -422,6 +445,37 @@ export class MTProtoConnection extends EventEmitter {
       for (const msg of messages) {
         this.processMessage(msg.msgId, msg.seqNo, msg.body);
       }
+    } catch (err) {
+      this.emit('error', err instanceof Error ? err : new Error(String(err)));
+    }
+  }
+
+  /**
+   * Handle gzip_packed by decompressing and processing the inner message.
+   *
+   * Format: cid(4) + packed_data(TL bytes)
+   */
+  private handleGzipPacked(msgId: bigint, seqNo: number, data: Buffer): void {
+    try {
+      // Read packed_data as TL bytes starting at offset 4
+      let offset = 4;
+      let length: number;
+      let headerSize: number;
+      const firstByte = data[offset]!;
+      if (firstByte < 254) {
+        length = firstByte;
+        headerSize = 1;
+      } else {
+        length = data[offset + 1]! | (data[offset + 2]! << 8) | (data[offset + 3]! << 16);
+        headerSize = 4;
+      }
+      const totalBeforePad = headerSize + length;
+      const padding = (4 - (totalBeforePad % 4)) % 4;
+      offset += headerSize + padding;
+      const packedData = data.subarray(4 + headerSize, 4 + headerSize + length);
+
+      const unpacked = gunzipSync(packedData);
+      this.processMessage(msgId, seqNo, Buffer.from(unpacked));
     } catch (err) {
       this.emit('error', err instanceof Error ? err : new Error(String(err)));
     }
@@ -531,16 +585,19 @@ export class MTProtoConnection extends EventEmitter {
    *
    * Format: cid(4) + bad_msg_id(8) + bad_msg_seqno(4) + error_code(4)
    */
-  private handleBadMsgNotification(data: Buffer): void {
+  private handleBadMsgNotification(serverMsgId: bigint, data: Buffer): void {
     if (data.length < 20) return;
 
     const badMsgId = data.readBigInt64LE(4);
     const errorCode = data.readInt32LE(16);
 
-    // Error code 16 or 17 means time sync issue
+    // Error code 16 or 17 means time sync issue — correct the time offset
     if (errorCode === 16 || errorCode === 17) {
-      // Time synchronization issue — the msg_id is too low or too high
-      this.emit('error', new Error(`bad_msg_notification: time sync error (code=${errorCode})`));
+      const serverTime = Number(serverMsgId >> 32n);
+      const localTime = Math.floor(Date.now() / 1000);
+      const newOffset = serverTime - localTime;
+      this.session?.updateTimeOffset(newOffset);
+      this.emit('error', new Error(`bad_msg_notification: time sync corrected (code=${errorCode}, offset=${newOffset}s)`));
     }
 
     // Reject any pending RPC for this msg_id
@@ -686,9 +743,12 @@ export class MTProtoConnection extends EventEmitter {
    * Handle reconnection after a connection drop.
    */
   private handleReconnect(): void {
+    if (this.reconnecting) return; // prevent concurrent reconnect attempts
+    this.reconnecting = true;
     this.stopAckTimer();
 
     if (this.reconnectStrategy.isExhausted()) {
+      this.reconnecting = false;
       this.emit('error', new Error('Reconnection attempts exhausted'));
       return;
     }
@@ -705,7 +765,9 @@ export class MTProtoConnection extends EventEmitter {
 
         // Reconnect with the existing session
         await this.connect(this.session ?? undefined);
+        this.reconnecting = false;
       } catch (err) {
+        this.reconnecting = false;
         this.emit('error', err instanceof Error ? err : new Error(String(err)));
         this.handleReconnect();
       }

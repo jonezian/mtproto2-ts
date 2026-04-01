@@ -158,12 +158,11 @@ export function parseUpdateShort(data: Buffer): BufferedUpdate | null {
   // The inner update starts here — its constructor ID is at position 4
   const innerCid = reader.readUInt32();
 
-  // The inner data is everything from offset 4 to the end minus the trailing date(4)
-  // But we don't know the exact boundary without full TL parsing.
-  // Instead, return the entire data from offset 4 onward (minus the 4-byte date at the end)
-  // as the inner update's raw data, and let the caller deal with it.
-  // The date is the last 4 bytes.
-  const innerData = Buffer.from(data.subarray(4, data.length - 4));
+  // The inner update + date follows the outer constructor ID.
+  // We can't strip the date without full TL parsing of the variable-length
+  // inner Update, so return everything after the outer cid and let the
+  // caller parse it with proper TL deserialization.
+  const innerData = Buffer.from(data.subarray(4));
 
   return {
     constructorId: innerCid,
