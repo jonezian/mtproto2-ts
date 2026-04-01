@@ -6,6 +6,8 @@ Complete TypeScript implementation of Telegram's MTProto 2.0 protocol.
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Node](https://img.shields.io/badge/node-%3E%3D22-green)
 
+**English** | [Suomi](README.fi.md)
+
 ## Features
 
 - **Type-safe** -- strict TypeScript throughout, no `any` types
